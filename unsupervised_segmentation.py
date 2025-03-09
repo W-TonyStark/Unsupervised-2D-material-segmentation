@@ -191,7 +191,6 @@ if args.scribble:
         inds_scr = inds_scr.cuda()
         target_scr = target_scr.cuda()
     target_scr = Variable(target_scr)
-    # set minLabels
     args.minLabels = len(mask_inds)
 
 # 模型实例化
@@ -290,7 +289,7 @@ if args.mode == 'train':
         if nLabels <= args.minLabels:
             print("nLabels", nLabels, "reached minLabels", args.minLabels, ".")
             break
-    # torch.save(model.state_dict(), 'trained_model_Mos2_test.pth')
+    torch.save(model.state_dict(), 'trained_model_Mos2_test.pth')
 
     # 将 metrics_history 的所有值转换为 Python 的 float 类型
     metrics_history = {
@@ -352,7 +351,7 @@ if args.mode == 'train':
         json.dump(class_labels, f)
 
     # 保存颜色映射表
-    # np.save('label_colours_test.npy', label_colours)
+    np.save('label_colours_test.npy', label_colours)
 
     # 对分类进行颜色记忆
     im_target = target.data.cpu().numpy()
@@ -361,13 +360,12 @@ if args.mode == 'train':
 
     im_target_rgb = cv2.resize(im_target_rgb, sourse_resolution, interpolation=cv2.INTER_LINEAR)
 
-    # cv2.imwrite("train_output_image_test.jpeg", im_target_rgb)
+    cv2.imwrite("train_output_image_test.jpeg", im_target_rgb)
 
 
 elif args.mode == 'evaluate':
     print("start evaluate")
     model.load_state_dict(torch.load('trained_model_Mos2_test.pth'))
-    # model.eval()
 
     # 加载颜色映射表
     label_colours = np.load('label_colours_test.npy')  # 使用训练时保存的颜色映射表
@@ -377,7 +375,7 @@ elif args.mode == 'evaluate':
         output = output.permute(1, 2, 0).contiguous().view(-1, args.nChannel)
         ignore, target = torch.max(output, 1)
         im_target = target.data.cpu().numpy()
-        # im_target = np.load('train_output_classes.npy')
+        im_target = np.load('train_output_classes.npy')
 
         # 加载类别标签映射字典
         with open('class_labels.json', 'r', encoding='UTF-8') as f:
@@ -416,5 +414,5 @@ if not args.visualize:
     im_target_rgb = np.array([label_colours[c % args.nChannel] for c in im_target])
     im_target_rgb = im_target_rgb.reshape(im.shape).astype(np.uint8)
 
-# output_file = os.path.splitext(args.input)[0] + '_output' + '.png'
-# cv2.imwrite(output_file, im_target_rgb)
+output_file = os.path.splitext(args.input)[0] + '_output' + '.png'
+cv2.imwrite(output_file, im_target_rgb)
